@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -93,21 +94,32 @@ public class CSPSolver<V> {
 	 */
 	private boolean AC3(CSP<V> csp, String var) {
 		LinkedList<ArcoRB<V>> lista_arcos = new LinkedList<ArcoRB<V>>();
-		lista_arcos.addAll(csp.arcosIncidentesEn(var));
-		while (lista_arcos.size() > 0) {
+		// inicializar con los arcos cuyo ORIGEN es var
+		for (ArcoRB<V> a : csp.listaArcosRest()) {
+			if (a.getOrigen().equals(var)) {
+				lista_arcos.addLast(a);
+			}
+		}
+		while (!lista_arcos.isEmpty()) {
 			ArcoRB<V> arco = lista_arcos.removeFirst();
 			if (revisar(csp, arco)) {
-				if (csp.getDominioDe(arco.getOrigen()).size() == 0) {
+				if (csp.getDominioDe(arco.getOrigen()).isEmpty()) {
 					return false;
 				}
-				// aniadir a la lista de arcos los arcos con destino arco.getOrigen()
-				Queue<ArcoRB<V>> arcos_entrantes = csp.arcosIncidentesEn(arco.getOrigen());
-				for (ArcoRB<V> a : arcos_entrantes) {
-					lista_arcos.addLast(a);
+				// añadir arcos (Z, X) donde X = arco.getOrigen()
+				// usamos la tabla de restricciones directamente para evitar NPE
+				List<ArcoRB<V>> arcosEntrantes = csp.getRestricciones().get(arco.getOrigen());
+				if (arcosEntrantes != null) {
+					for (ArcoRB<V> a : arcosEntrantes) {
+						// evitar reañadir el arco (arco.getDestino(), arco.getOrigen())
+						if (!a.getOrigen().equals(arco.getDestino())) {
+							lista_arcos.addLast(a);
+						}
+					}
 				}
 			}
 		}
-		return false;
+		return true;
 	}
 
 	/**
