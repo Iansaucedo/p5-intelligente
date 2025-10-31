@@ -41,8 +41,10 @@ public class CSPSolver<V> {
 	 * que resulte arco-consistente 2) si no queda inconsistente y tampoco una
 	 * asignacion total, lanza MAC
 	 * 
-	 * @param csp, un problema CSP binario con los valores de las variables de tipo V
-	 * @return una tabla hash (mapa) con la solucion (una asignacion total y factible) (la
+	 * @param csp, un problema CSP binario con los valores de las variables de tipo
+	 *             V
+	 * @return una tabla hash (mapa) con la solucion (una asignacion total y
+	 *         factible) (la
 	 *         clave de la tabla es un String, el nombre de la variable; el valor es
 	 *         el valor asignado a dicha variable (de tipo V))
 	 */
@@ -51,7 +53,8 @@ public class CSPSolver<V> {
 		// 1) propagamos restricciones en los dominios iniciales para establecer
 		// arco-consistencia
 		if (AC3(csp)) { // si AC3 no detecta que el problema original era inconsistente, lo resolvemos
-			// 2) asignamos valores a las variables para las que solo queda un elemento en el dominio
+			// 2) asignamos valores a las variables para las que solo queda un elemento en
+			// el dominio
 			actualizaAsignacion(asignacion, csp);
 			// 3) si todavia quedan dominios con mas de un valor, lanzamos busqCSP
 			if (!asignacionTotal(asignacion, csp)) {
@@ -67,32 +70,46 @@ public class CSPSolver<V> {
 
 	/**
 	 * Metodo AC-3 para todas las restricciones del CSP
+	 * 
 	 * @param csp, el problema (se modifica para que pase a ser arco-consistente)
 	 * @return falso si se encuentra una inconsistencia, cierto en otro caso
-	 * IMPORTANTE: Se inicia la lista de arcos de restriccion por comprobar 
-	 * 			   a TODOS los arcos/restricciones del problema
+	 *         IMPORTANTE: Se inicia la lista de arcos de restriccion por comprobar
+	 *         a TODOS los arcos/restricciones del problema
 	 */
-	private boolean AC3( CSP<V> csp ){
+	private boolean AC3(CSP<V> csp) {
 		// TODO Completar
 		return false;
 	}
 
-	
 	/**
 	 * Metodo AC-3 para las restricciones desde una variable
+	 * 
 	 * @param csp, el problema (se modifica para que vuelva a ser arco-consistente)
 	 * @param var, la variable cuyo dominio acabamos de modificar
-	 * @return falso si se encuentra una inconsistencia (un dominio queda vacio), cierto en otro caso
-	 * IMPORTANTE: Se inicia la lista de arcos de restriccion por comprobar 
-	 * 			   a los arcos con origen la variable var
+	 * @return falso si se encuentra una inconsistencia (un dominio queda vacio),
+	 *         cierto en otro caso
+	 *         IMPORTANTE: Se inicia la lista de arcos de restriccion por comprobar
+	 *         a los arcos con origen la variable var
 	 */
-	private boolean AC3 ( CSP<V> csp, String var ){
-		// TODO Completar
+	private boolean AC3(CSP<V> csp, String var) {
+		LinkedList<ArcoRB<V>> lista_arcos = new LinkedList<ArcoRB<V>>();
+		lista_arcos.addAll(csp.arcosIncidentesEn(var));
+		while (lista_arcos.size() > 0) {
+			ArcoRB<V> arco = lista_arcos.removeFirst();
+			if (revisar(csp, arco)) {
+				if (csp.getDominioDe(arco.getOrigen()).size() == 0) {
+					return false;
+				}
+				// aniadir a la lista de arcos los arcos con destino arco.getOrigen()
+				Queue<ArcoRB<V>> arcos_entrantes = csp.arcosIncidentesEn(arco.getOrigen());
+				for (ArcoRB<V> a : arcos_entrantes) {
+					lista_arcos.addLast(a);
+				}
+			}
+		}
 		return false;
 	}
-	
 
-	
 	/**
 	 * Metodo revisar, para revisar una restriccion y eliminar inconsistencias:
 	 * recorre el dominio de la variable X eliminando los valores inconsistentes
@@ -106,7 +123,27 @@ public class CSPSolver<V> {
 	 */
 	private boolean revisar(CSP<V> csp, ArcoRB<V> arco) {
 		boolean revisado = false;
-		// TODO Completar
+		Set<V> valores_a_remover = new HashSet<V>();
+		String varX = arco.getOrigen();
+		String varY = arco.getDestino();
+		Set<V> dominioX = csp.getDominioDe(varX);
+		Set<V> dominioY = csp.getDominioDe(varY);
+		for (V valX : dominioX) {
+			boolean existeSoporte = false;
+			for (V valY : dominioY) {
+				if (arco.consistentes(valX, valY)) {
+					existeSoporte = true;
+					break;
+				}
+			}
+			if (!existeSoporte) {
+				valores_a_remover.add(valX);
+				revisado = true;
+			}
+		}
+		for (V valR : valores_a_remover) {
+			csp.borraValorDeDom(varX, valR);
+		}
 		return revisado;
 	}
 
