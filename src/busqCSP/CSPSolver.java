@@ -32,7 +32,7 @@ public class CSPSolver<V> {
 		String autores = null;
 		// TODO cambiar la siguiente linea para que autores contenga el nombre de los
 		// alumnos del grupo
-		autores = "Nombre1 Apellidos1\n" + "Nombre2 Apellidos2\n";
+		autores = "Cristian Monsalve\n" + "Rodrigo Ortega\n" + "Ian Saucedo\n" + "Francisco Uribe\n";
 		return autores;
 	}
 
