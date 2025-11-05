@@ -188,8 +188,50 @@ public class CSPSolver<V> {
 	 *         de pasarle una copia del CSP, por si hay que hacer backtracking.
 	 */
 	private Map<String, V> mac(Map<String, V> asignacion, CSP<V> csp) {
-		// TODO Completar
-		// Optativo: seleccionar la variable a asignar utilizando el heuristico MRV
+		// Implementacion MAC (Backtracking + Maintaining Arc Consistency)
+		// Si la asignacion es total devolvemos la asignacion
+		if (asignacionTotal(asignacion, csp)) {
+			return new HashMap<String, V>(asignacion);
+		}
+
+		// Seleccionar una variable no asignada (heuristico MRV: minimo dominio)
+		List<String> varsNoAsig = varsNoAsignadas(asignacion, csp);
+		String varSel = null;
+		int minDom = Integer.MAX_VALUE;
+		for (String v : varsNoAsig) {
+			int sz = csp.getDominioDe(v).size();
+			if (sz < minDom) {
+				minDom = sz;
+				varSel = v;
+			}
+		}
+		if (varSel == null) // no hay variables para asignar
+			return null;
+
+		// Probar cada valor en el dominio de varSel
+		for (V val : new HashSet<V>(csp.getDominioDe(varSel))) {
+			// crear copia del CSP y de la asignacion para la rama
+			CSP<V> copiaCSP = new CSP<V>(csp); // copia dura de dominios
+			Map<String, V> copiaAsignacion = new HashMap<String, V>(asignacion);
+			// asignar valor y dejar dominio en singleton
+			asignaValorA(varSel, val, copiaAsignacion, copiaCSP);
+			// Propagar con AC-3 desde la variable asignada
+			if (AC3(copiaCSP, varSel)) {
+				// actualizar asignacion con dominios unitarios que hayan quedado
+				actualizaAsignacion(copiaAsignacion, copiaCSP);
+				// si ya es total devolvemos
+				if (asignacionTotal(copiaAsignacion, copiaCSP)) {
+					return copiaAsignacion;
+				}
+				// recursividad
+				Map<String, V> resultado = mac(copiaAsignacion, copiaCSP);
+				if (resultado != null) {
+					return resultado;
+				}
+			}
+			// else backtrack: probar siguiente valor
+		}
+		// ninguna asignacion valida encontrada
 		return null;
 	}
 
