@@ -77,8 +77,28 @@ public class CSPSolver<V> {
 	 *         a TODOS los arcos/restricciones del problema
 	 */
 	private boolean AC3(CSP<V> csp) {
-		// TODO Completar
-		return false;
+		// inicializar la lista con TODOS los arcos/restricciones del problema
+		LinkedList<ArcoRB<V>> lista_arcos = new LinkedList<ArcoRB<V>>(csp.listaArcosRest());
+		while (!lista_arcos.isEmpty()) {
+			ArcoRB<V> arco = lista_arcos.removeFirst();
+			if (revisar(csp, arco)) {
+				// si tras revisar el dominio queda vacio, inconsistencia
+				if (csp.getDominioDe(arco.getOrigen()).isEmpty()) {
+					return false;
+				}
+				// añadir arcos (Z, X) donde X = arco.getOrigen()
+				List<ArcoRB<V>> arcosEntrantes = csp.getRestricciones().get(arco.getOrigen());
+				if (arcosEntrantes != null) {
+					for (ArcoRB<V> a : arcosEntrantes) {
+						// evitar reañadir el arco (arco.getDestino(), arco.getOrigen())
+						if (!a.getOrigen().equals(arco.getDestino())) {
+							lista_arcos.addLast(a);
+						}
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	/**
